@@ -4,3 +4,4 @@ streamlit
 boto3
 seaborn
 datetime
+xlrd
