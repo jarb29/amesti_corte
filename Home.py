@@ -265,7 +265,7 @@ if uploaded_file is not None:
                     pattern_shape="Chatarra", 
                     color = "N",
                     pattern_shape_sequence=['/', '\\', 'x', '-', '|', '+', '.'],
-                    title="<b>Nitro Y Chatarra</b>",
+                    title="<b>Nitro Y Chatarra Por Programa</b>",
                     template="plotly_dark",
                     )
 
@@ -284,7 +284,7 @@ if uploaded_file is not None:
                     pattern_shape="item", 
                     color = "item",
                     pattern_shape_sequence=['/', '\\', 'x', '-', '|', '+', '.'],
-                    title="<b>Nitro Y Chatarra</b>",
+                    title="<b>Nitro Y Chatarra Totales</b>",
                     template="plotly_dark",
                     )
 
