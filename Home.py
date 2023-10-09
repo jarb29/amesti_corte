@@ -7,6 +7,7 @@ import datetime
 import plotly.express as px
 import datetime
 from io import StringIO
+from modelos import modelos_nuevos
 import matplotlib.pyplot as plt
 
 st.title(":bar_chart: Corte Dashboard.")
@@ -30,17 +31,51 @@ def total(df):
                             'Bruto Tiempo de ejecución del programa': "Tiempo_Bruto",
                             'Neto Tiempo de ejecución del programa': "Tiempo_Neto",
                             'Neto Tiempo mecaniz.': "Tiempo_Mecanizado",})
+    df['Modelo_Laser'] = df['Laser'].apply(lambda x: lasers[x])
     
-    return df
+    programas = list(set(df['Programa'].tolist()))
+    missing_programs = [each for each in programas if modelos_nuevos.get(each) == None]
+    print('  ')
+    for pr in missing_programs:
+        df = df[df["Programa"] != pr]
+        
+    programas_laser = list(set(df['Programa'].tolist()))
+    programa_laser =  []
+    
+    for l in programas_laser:
+        new_df = df[df['Programa'] == l]
+        laser_used = list(set(new_df['Modelo_Laser'].tolist()))
+        for lu in laser_used:
+            if modelos_nuevos[l].get(lu) == None:
+                ob_var = {
+                    l:lu
+                }
+                programa_laser.append(ob_var)
+                
+    for pr in programa_laser:
+        k = list(pr.keys())[0]
+        df = df[df["Programa"] != k]
+
+    df['Modelo_programas'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['modelo'], axis=1)
+    df['cantidad_piezas'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['cantidad'], axis=1)
+    df['Tiempo_nominal'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['tpnS'], axis=1)
+    df['Desperdicio'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['dp%'], axis=1)
+    print(df.head())
+    return df, missing_programs, programa_laser
 
 
-
+lasers = {
+    'Laser#1': 'L5030',
+    'Laser#2': 'L5030',
+    'Laser#3': 'L3030',  
+}
 
 uploaded_file = st.file_uploader("Cargue el archivo")
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
-    df = total(df)
-    st.write(df)
+    df, missing_programs, programa_laser = total(df)
+    st.write('Programas faltantes', missing_programs)
+    st.write('Programas/Laser faltantes ', programa_laser)
     
 
 
@@ -60,26 +95,38 @@ if uploaded_file is not None:
         default=df['Laser'].unique()
     )
 
-    programa = st.sidebar.multiselect(
-        "Select programa:",
-        options=df['Programa'].unique(),
-        default=df['Programa'].unique()[0:10],
+    modelos = st.sidebar.multiselect(
+        "Select Modelo:",
+        options=df['Modelo_programas'].unique(),
+        default=df['Modelo_programas'].unique()[0:10],
     )
 
 
 
     df_selection = df.query(
-        "Laser == @laser & Programa == @programa "
+        "Laser == @laser & Modelo_programas == @modelos "
     )
+
+    
+    programa = st.sidebar.multiselect(
+        "Select Programa:",
+        options=df_selection['Programa'].unique(),
+        default=df_selection['Programa'].unique()[0:10],
+    )
+    
+    df_selection_p = df_selection.query(
+        "Programa == @programa"
+    )
+        
 
 # # ---- MAINPAGE ----
 
 
 # # TOP KPI's\
     total_tiempo = round(df["Tiempo_Bruto"].sum()/60, 2)
-    date_tiempo = round(df_selection["Tiempo_Bruto"].sum()/60, 2)
+    date_tiempo = round(df_selection_p["Tiempo_Bruto"].sum()/60, 2)
     programas = round(df['Programa'].nunique(), 1)
-    programas_selected = round(df_selection['Programa'].nunique(), 1)
+    programas_selected = round(df_selection_p['Programa'].nunique(), 1)
     # date_average_earning = round(df_selection['Programas'].nunique(), 1)
     # date_average_loosing = round(df_selection['profit'][df['profit_'] == 1].mean(), 1)
     # length_average_earning = len(df['profit'][df['profit_'] == 0])
@@ -141,11 +188,44 @@ if uploaded_file is not None:
 
 # # SALES BY PRODUCT LINE [BAR CHART]
     sales_by_product_line = (
-        df_selection.groupby('Programa') \
-       .agg(count=('Programa', 'size'), tiempo_promedio=('Tiempo_Bruto', 'mean')) \
+        df_selection_p.groupby('Programa') \
+       .agg(count=('Programa', 'size'), tiempo_promedio=('Tiempo_Bruto', 'mean'),
+            tiempo_suma=('Tiempo_Bruto', 'sum')) \
        .reset_index()
        
     )
+
+    by_product_laser = (
+        df.groupby(['Programa' , 'Modelo_Laser']) \
+       .agg(count=('Programa', 'size'), tiempo_promedio=('Tiempo_Bruto', 'mean'),
+            tiempo_suma=('Tiempo_Bruto', 'sum')) \
+       .reset_index()
+       
+    )
+    nitrox = {
+        'L5030' : 2,
+        'L3030' : 4
+    }
+    by_product_laser['Modelo_programas'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['modelo'], axis=1)
+    by_product_laser['cantidad_piezas'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['cantidad'], axis=1)
+    by_product_laser['Tiempo_nominal'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['tpnS'], axis=1)
+    by_product_laser['Desperdicio'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['dp%'], axis=1)
+    by_product_laser['Chatarra'] = round(by_product_laser['Desperdicio'] * by_product_laser['count'] / 100, 2)
+    by_product_laser['N'] = by_product_laser.apply(lambda x:  round(nitrox[x['Modelo_Laser']] * x['tiempo_suma'],2), axis=1)
+    
+    
+    sum_chatarra = by_product_laser['Chatarra'].sum()
+    sum_nitro = by_product_laser['N'].sum()
+    sum_nitro_1 = by_product_laser[by_product_laser['Modelo_Laser']=='L5030']['N'].sum()
+    sum_nitro_2 = by_product_laser[by_product_laser['Modelo_Laser']=='L3030']['N'].sum()
+    
+    plot_final = {
+        'item': ['chatarra', 'Nitro_t','Nitro_1','Nitro_2'],
+        'values' : [sum_chatarra, sum_nitro, sum_nitro_1, sum_nitro_2 ]
+        }
+    total_df= pd.DataFrame(plot_final)
+    
+    
     fig_product_sales = px.bar(
         sales_by_product_line,
         x="Programa",
@@ -159,6 +239,71 @@ if uploaded_file is not None:
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis=(dict(showgrid=False))
     )
+    
+    planchas_cortadas = px.bar(
+        by_product_laser,
+        x=by_product_laser.Programa,
+        y="count",
+        color = 'Modelo_Laser',
+        # orientation="h",
+        title="<b>Planchas Cortdas</b>",
+        # color_discrete_sequence=["#0083B8"] * len(profit_df_selection_method),
+        template="plotly_dark",
+        labels={'count':'Planchas Cortdas', 'Modelo_Laser':'Laser'}
+        )
+    planchas_cortadas.update_layout(
+        xaxis=dict(tickmode="linear"),
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=(dict(showgrid=True))
+    )
+    
+    
+    
+    
+    
+    best20 = px.bar(by_product_laser, y="Programa", x="count", 
+                    pattern_shape="Chatarra", 
+                    color = "N",
+                    pattern_shape_sequence=['/', '\\', 'x', '-', '|', '+', '.'],
+                    title="<b>Nitro Y Chatarra</b>",
+                    template="plotly_dark",
+                    )
+
+
+    best20.update_layout(
+        xaxis=(dict(showgrid=True)),
+        yaxis=(dict(showgrid=True)),
+    )
+    best20.update_coloraxes(colorbar={'orientation':'h', 'thickness':20, 'y': -1.0})
+
+    best20.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+    best20.update_yaxes(showticklabels=True)
+    
+    
+    totales = px.bar(total_df, y="values", x="item", 
+                    pattern_shape="item", 
+                    color = "item",
+                    pattern_shape_sequence=['/', '\\', 'x', '-', '|', '+', '.'],
+                    title="<b>Nitro Y Chatarra</b>",
+                    template="plotly_dark",
+                    )
+
+
+    totales.update_layout(
+        xaxis=(dict(showgrid=True)),
+        yaxis=(dict(showgrid=True)),
+    )
+    totales.update_coloraxes(colorbar={'orientation':'h', 'thickness':20, 'y': -1.0})
+
+    totales.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+    totales.update_yaxes(showticklabels=True)
+    
+    
+
+    
+    
+    
+    
 
 # # SALES BY HOUR [BAR CHART]
 # sales_by_hour = df_selection.groupby(by=["symbol"]).sum()[["profit"]]
@@ -177,6 +322,12 @@ if uploaded_file is not None:
 #     yaxis=(dict(showgrid=False)),
 # )
     st.plotly_chart(fig_product_sales, use_container_width=True)
+    st.markdown("""---""")
+    st.plotly_chart(planchas_cortadas, use_container_width=True)
+    st.markdown("""---""")
+    st.plotly_chart(best20, use_container_width=True)
+    st.markdown("""---""")
+    st.plotly_chart(totales, use_container_width=True)
     st.markdown("""---""")
 # st.plotly_chart(fig_hourly_sales, use_container_width=True)
 # st.markdown("""---""")
@@ -318,659 +469,13 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 #     return new_grouped
 
 
+#@title
+# Cantidad de pieza criticas
 
-modelos_nuevos = {
-    '05RB050001ABC':{
-        'modelo' : 'RB',
-        'cantidad':14
-    },
-    '05N0450002BBC':{
-        'modelo' : 'N450',
-        'cantidad':8
-    },
-    '05RB050002AAC':{
-        'modelo' : 'RB',
-        'cantidad':1
-    },
-    '05N03500_8AAZ':{
-        'modelo' : 'N350',
-        'cantidad':24,
-        "tpn":3
-    },
-    '05N0450002BAC':{
-        'modelo' : 'N450',
-        'cantidad':1
-    },
-    '05SC380002CAC':{
-        'modelo' : 'SC380',
-        'cantidad':1,
-        "tpn":3
-    },
-    '05C400B002ACC':{
-        'modelo' : 'C400',
-        'cantidad':5
-    },
-    '05N0380002CAC':{
-        'modelo' : 'N380',
-        'cantidad':1
-    },
-
-    '05N03800_8AAZ':{
-        'modelo' : 'N380',
-        'cantidad':14
-    },
-
-    '05RB050005AAC':{
-        'modelo' : 'RB',
-        'cantidad':4
-    },
-    '05CALLR0_8ACZ':{
-        'modelo' : 'COCINA',
-        'cantidad':14,
-        "tpn":4
-    },
-    '05R450D0_8AAZ':{
-        'modelo' : 'R450D',
-        'cantidad':11
-    },
-    '05N0350002AAC':{
-        'modelo' : 'N350',
-        'cantidad':2,
-        "tpn":5
-    },
-    '05R450D002ABC':{
-        'modelo' : 'R450D',
-        'cantidad':2,
-        "tpn":4
-    },
-    '05Y81CH0_8ACZ':{
-        'modelo' : 'I8100+',
-        'cantidad':2,
-        "tpn":5
-    },
-    '05CALLR002AAC':{
-        'modelo' : 'COCINA',
-        'cantidad':2,
-        "tpn":6
-    },
-    '05Y700R001AAC':{
-    },
-    '05C400B002AAC':{
-        'modelo' : 'C400',
-        'cantidad':2,
-        'tpn':4
-    },
-    '05C400B008AAZ':{
-        'modelo' : 'C400',
-        'cantidad':10
-    },
-    '05Y81CH0_8ABZ':{
-        'modelo' : 'I8100+',
-        'cantidad':2,
-        "tpn":7
-    },
-    '05C400B002ABC':{
-        'modelo' : 'C400',
-        'cantidad':6,
-
-    },
-    '05N0450003AAC':{
-        'modelo' : 'N450',
-        'cantidad':10
-    },
-    '05Y81CH002AAC':{
-        'modelo' : 'I8100+',
-        'cantidad':1,
-        "tpn":7
-    },
-    '05R450D002AAC':{
-        'modelo' : 'R450D',
-        'cantidad':8,
-        "tpn":8
-    },
-    '05R450D003ABC':{
-        'modelo' : 'R450D',
-        'cantidad':4,
-        "tpn":7
-    },
-    '05N0380003AAC':{
-        'modelo' : 'N380',
-        'cantidad':10
-    },
-    '05RB050004AAC':{
-        'modelo' : 'RB',
-        'cantidad':5
-    },
-    '05R450D003AAC':{
-        'modelo' : 'R450D',
-        'cantidad':6,
-        "tpn":10
-    },
-    '05RB050003AAC':{
-        'modelo' : 'RB',
-        'cantidad':10
-    },
-    '05RB050004ABC':{
-        'modelo' : 'RB',
-        'cantidad':5
-    },
-    '05N0350003AAC':{
-        'modelo' : 'N350',
-        'cantidad':14,
-        "tpn":12
-    },
-    '05Y81CH0_8AAZ':{
-        'modelo' : 'I8100+',
-        'cantidad':4,
-        "tpn":11
-    },
-    '05N0450004AAC':{
-        'modelo' : 'N450',
-        'cantidad':2
-    },
-    '05N0380004AAC':{
-        'modelo' : 'N380',
-        'cantidad':2
-    },
-    '05N0350004AAC':{
-        'modelo' : 'N350',
-        'cantidad':4,
-        "tpn":23
-    },
-    '05N0380004ABC':{
-        'modelo' : 'N380',
-        'cantidad':10
-    },
-    '05C400B003ABC':{
-        'modelo' : 'C400',
-        'cantidad':21
-    },
-    '05CALVI1_5AAI':{
-        'modelo' : 'COCINA',
-        'cantidad':4,
-        "tpn":10
-    },
-    '05C400B003AAC':{
-        'modelo' : 'C400',
-        'cantidad':3
-    },
-    '05N0450004ABC':{
-        'modelo' : 'N450',
-        'cantidad':8
-    },
-    '05R450D004AAC':{
-        'modelo' : 'R450D',
-        'cantidad':4,
-        "tpn":21
-    },
-    '05C400B004AAC':{
-        'modelo' : 'C400',
-        'cantidad':2,
-        'tpn':17
-    },
-    '05SC380004AAC':{
-        'modelo' : 'SC380',
-        'cantidad':2,
-        "tpn":17
-    },
-    '05Y81CH004AAC':{
-        'modelo' : 'I8100+',
-        'cantidad':6,
-        "tpn":16
-    },
-    '05RB050005ABC':{
-        'modelo' : 'RB',
-        'cantidad':4
-    },
-    '05N0450004ACC':{
-        'modelo' : 'N450',
-        'cantidad':16
-    },
-    '05CALLR006AAC':{
-        'modelo' : 'COCINA',
-        'cantidad':6,
-        "tpn":24
-    },
-    '05Y81CH003AAI': {
-        'modelo' : 'I8100+',
-        'cantidad':42,
-        "tpn":66
-    },
-
-    ##############
-    "ESP_DEFLECT0R_3MM":{
-        'modelo' : 'N350',
-        'cantidad':15,
-        "tpn":7
-    },
-        "C5003_CENI_08":{
-        'modelo' : 'C500',
-        'cantidad':13,
-        "tpn":3
-    },
-        "REJILLA_3MM_2000":{
-        'modelo' : 'FLEJES',
-        'cantidad':9,
-        "tpn":21
-    },
-        "CAIN0X2_C0NJI_1":{
-        'modelo' : 'COCINA',
-        'cantidad':1,
-        "tpn":4
-    },
-        "C500_3_C0NJ_08MM":{
-        'modelo' : 'C500',
-        'cantidad':2.5,
-        "tpn":2
-    },
-        "05CALVI0_5IAI":{
-        'modelo' : 'COCINA',
-        'cantidad':5,
-        "tpn":2
-    },
-        "05SC380002AAC_BM":{
-        'modelo' : 'SC380',
-        'cantidad':1,
-        "tpn":3
-    },
-        "05S380T003BAC":{
-        'modelo' : 'SC380',
-        'cantidad':39,
-        "tpn":12
-    },
-        "05I800P002ABC":{
-        'modelo' : 'INSERTO3',
-        'cantidad':3,
-        "tpn":5
-    },
-        "05CALVI1_5ABI":{
-        'modelo' : 'COCINA',
-        'cantidad':22,
-        "tpn":10
-    },
-        "05S380T003AAC":{
-        'modelo' : 'SC380',
-        'cantidad':11,
-        "tpn":5
-    },
-        "05I800P006AAC":{
-        'modelo' : 'INSERTO3',
-        'cantidad':12,
-        "tpn":26
-    },
-
-# Corresponde  a modelos que se cortaron pero con la nomenclatura vieja
-
-      'ESP_CENICER0_II':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'ESP_0BSTRUCTIR_IN':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'ESP_PR0T_SENIC':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'N350_3_4MM_I':{
-        'modelo' : 'N350',
-        'cantidad':2
-    },
-      'ESP_TECH0_F0ND_L':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'ESP_2MM_LE_450':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      '1_5MM_IN0X':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'ESP_CUB_BASE_CEN':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'ESP_PR0TEC_INF':{
-        'modelo' : 'COCINA',
-        'cantidad':2
-    },
-      'BASE_900_2MM':{
-        'modelo' : 'BASES',
-        'cantidad':3
-    },
-      'CAIN0X2_C0NJII_1':{
-        'modelo' : 'COCINA',
-        'cantidad':14
-    },
-      'C0D0S6P_05MM':{
-        'modelo' : 'CODOS_HOJALATA',
-        'cantidad':6
-    },
-      'CAIN0X2_C0NJ_4MM':{
-        'modelo' : 'COCINA',
-        'cantidad':12,
-        "tpn":24
-    },
-      'CAIN0X2_F0ND0_05':{
-        'modelo' : 'COCINA',
-        'cantidad':5
-    },
-      'CAIN0X2_C0NJII_3':{
-        'modelo' : 'COCINA',
-        'cantidad':8,
-        "tpn":14
-    },
-      'CAIN0X2_C0NJII_08':{
-        'modelo' : 'COCINA',
-        'cantidad':5,
-        "tpn":3
-    },
-      'CAIN0X2_C0NJI_08':{
-        'modelo' : 'COCINA',
-        'cantidad':5,
-        "tpn":3
-    },
-      'CAIN0X2_C0NJI_3MM':{
-        'modelo' : 'COCINA',
-        'cantidad':2,
-        "tpn":13
-    },
-      'CAIN0X2_PAN_LAT':{
-        'modelo' : 'COCINA',
-        'cantidad':2,
-        "tpn":3
-    },
-      'CAIN0X2_C0NJ_05MM':{
-        'modelo' : 'COCINA',
-        'cantidad':1,
-        "tpn":3
-    },
-    'I8100P_1_PAN_C400':{
-        'modelo' : 'I8100+',
-        'cantidad':2,
-        "tpn":5
-
-    },
-    '05C500B002AAC':{
-        'modelo' : 'C500',
-        'cantidad':3,
-        'tpn':3
-    },
-    '05C500B002ABC':{
-        'modelo' : 'C500',
-        'cantidad':2,
-        'tpn':6
-    },
-    '05C500B003AAC':{
-        'modelo' : 'C500',
-        'cantidad':5,
-        'tpn':9
-    },
-    '05C500B004AAC':{
-        'modelo' : 'C500',
-        'cantidad':2,
-        'tpn':17
-    },
-
-# Corresponde a los modelos que tienen el nuevo nombre pero no se pudieron analizar
-
-    '05RB050001AAC':{
-        'modelo' : 'RB',
-        'cantidad':14
-    },
-    '05SC3800_8AAZ':{
-        'modelo' : 'SC380',
-         'cantidad':12,
-         "tpn":2
-    },
-    '05N0380002AAC':{
-        'modelo' : 'N380',
-        'cantidad':1
-    },
-    '05N04500_8AAZ':{
-        'modelo' : 'N450',
-        'cantidad':14
-    },
-    '05C400B0_8ABZ':{
-        'modelo' : 'C400',
-        'cantidad':3
-    },
-    '05CALVI1':{
-        'modelo' : 'COCINA',
-        'cantidad':12
-    },
-    '05I800P004ABC': {
-        'modelo' : 'INSERTO3',
-        'cantidad':3
-    },
-    '05I800P002AAC': {
-        'modelo' : 'INSERTO3',
-        'cantidad':2,
-        "tpn":11
-    },
-    '05CALVI4AAI': {
-        'modelo' : 'COCINA',
-        'cantidad':22,
-        "tpn":14
-    },
-    '05I800P004AAC': {
-        'modelo' : 'INSERTO3',
-        'cantidad':2
-    },
-    '05N0350004ABC': {
-        'modelo' : 'N350',
-        'cantidad':6,
-        "tpn":18
-    },
-    '05I800P003AAC': {
-        'modelo' : 'INSERTO3',
-        'cantidad':8,
-        "tpn":11
-    },
-    '05SC380002AAC_B': {
-        'modelo' : 'SC380',
-        'cantidad':1,
-        "tpn":3
-    },
-    "CAIN0X2_C0NJ_6MM": {
-        'modelo' : 'COCINA',
-        'cantidad':6,
-        "tpn":24
-    },
-    "05I800P001AAC": {
-        'modelo' : 'INSERTO3',
-        'cantidad':36,
-        "tpn":15
-    },
-    "RACK_L1200_4MM": {
-        'modelo' : 'Planta',
-        'cantidad':4,
-        "tpn":9
-    },
-    "05CALVI1AAC": {
-        'modelo' : 'COCINA',
-        'cantidad':2,
-        "tpn":3
-    },
-    "05N0360003AAC": {
-        'modelo' : 'N3604',
-        'cantidad':11,
-        "tpn":12
-    },
-    "05N0360002AAC": {
-        'modelo' : 'N3604',
-        'cantidad':2,
-        "tpn":4
-    },
-    "05N0360004AAC": {
-        'modelo' : 'N3604',
-        'cantidad':2,
-        "tpn":18
-    },
-    "05N03600_8AAZ": {
-        'modelo' : 'N3604',
-        'cantidad':24,
-        "tpn":3
-    },
-     "05RB0500_8AAC": {
-        'modelo' : 'RB',
-        'cantidad':21,
-        "tpn":2
-    },
-     "05RB0500_8ABC": {
-        'modelo' : 'RB',
-        'cantidad':14,
-        "tpn":1
-    },
-
-    "ESP_T0LVA_P0ST_II": {
-        'modelo' : 'I8100+',
-        'cantidad':5,
-        "tpn":10
-    },
-###########25/04/2023
-
- '05CALVI3AAC': {
-        'modelo' : 'COCINA',
-        'cantidad':2,
-        "tpn":12
-    },
-
-     '05CALVI3ABC': {
-        'modelo' : 'COCINA',
-        'cantidad':8,
-        "tpn":13
-    },
-
-    '05R0490002AAC': {
-        'modelo' : 'R490',
-        'cantidad':2,
-        "tpn":1.5
-    },
-
-    '05R0490002ABC': {
-        'modelo' : 'R490',
-        'cantidad':10,
-        "tpn":7.2
-    },
-
-    '05R0490002ACC': {
-        'modelo' : 'R490',
-        'cantidad':10,
-        "tpn":3.1
-    },
-
-     '05R0490003AAC': {
-        'modelo' : 'R490',
-        'cantidad':15,
-        "tpn":7.4
-    },
-
-
-    '05R0490004AAC': {
-        'modelo' : 'R490',
-        'cantidad':2,
-        "tpn":10
-    },
-
-     '05R0490004ABC': {
-        'modelo' : 'R490',
-        'cantidad':5,
-        "tpn":14
-    },
-
-    '05R04900_8AAZ': {
-        'modelo' : 'R490',
-        'cantidad':3,
-        "tpn":18
-    },
-
-    '05R04900_8ABZ': {
-        'modelo' : 'R490',
-        'cantidad':14,
-        "tpn":3.2
-    },
-######################### 09/05/2023
-    '05CALLR0_8AAZ': {
-        'modelo' : 'COCINA',
-        'cantidad':5,
-        "tpn":3
-    },
-
-    '05CALLR0_8ABZ': {
-        'modelo' : 'COCINA',
-        'cantidad':5,
-        "tpn":3
-    },
-
-      '05CALLR003ACC': {
-        'modelo' : 'COCINA',
-        'cantidad':82,
-        "tpn":20
-    },
-
-      '05N38T0002CAC': {
-        'modelo' : 'N380',
-        'cantidad':1,
-        "tpn":3
-    },
-    '05N38T0004ABC': {
-        'modelo' : 'N380',
-        'cantidad':10,
-        "tpn":10
-    },
-
-       '05N380T003AAC': {
-        'modelo' : 'N380',
-        'cantidad':10,
-        "tpn":11
-    },
-    '05N380T004AAC': {
-        'modelo' : 'N380',
-        'cantidad':4,
-        "tpn":13
-    },
-    '05N380T004AAC_': {
-        'modelo' : 'N380',
-        'cantidad':4,
-        "tpn":13
-    },
-        '05I800P004ACC': {
-        'modelo' : 'N380',
-        'cantidad':4,
-        "tpn":13
-    },
-     '05SC360002AAC': {
-        'modelo' : 'SC360',
-        'cantidad':2,
-        "tpn":6
-    },
-     '05SC3600_8AAZ': {
-        'modelo' : 'SC360',
-        'cantidad':24,
-        "tpn":7
-    },
-
-     '05SC360002ABC': {
-        'modelo' : 'SC360',
-        'cantidad':39,
-        "tpn":6
-    },
-     '05SC360004AAC': {
-        'modelo' : 'SC360',
-        'cantidad':2,
-        "tpn":21
-    },
-     '05SC360003AAC': {
-        'modelo' : 'SC360',
-        'cantidad':11,
-        "tpn":17
-    },
-
-
-    }
-
-
+# Corresponde a los modelos nuevos analizados
+# dp% = deperdicio en porcentaje
+# tpnS = timepo nomindal en segundos
+# cantidad es el numero de estufas que se pueden sacar de ese archivo en la pieza principal
+# To run the model
+# source .venv/bin/activate
+# streamlit run Home.py
