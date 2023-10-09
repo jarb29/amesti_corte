@@ -220,7 +220,7 @@ if uploaded_file is not None:
     sum_nitro_2 = by_product_laser[by_product_laser['Modelo_Laser']=='L3030']['N'].sum()
     
     plot_final = {
-        'item': ['chatarra', 'Nitro_t','Nitro_1','Nitro_2'],
+        'item': ['Chatarra', 'Nitro_total','Nitro_L5030','Nitro_L3030'],
         'values' : [sum_chatarra, sum_nitro, sum_nitro_1, sum_nitro_2 ]
         }
     total_df= pd.DataFrame(plot_final)
