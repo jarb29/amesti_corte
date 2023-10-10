@@ -1,3 +1,10 @@
+#@title
+# Cantidad de pieza criticas
+
+# Corresponde a los modelos nuevos analizados
+# dp% = deperdicio en porcentaje
+# tpnS = timepo nomindal en segundos
+# cantidad es el numero de estufas que se pueden sacar de ese archivo en la pieza principal
 
 modelos_nuevos = {
    '05RB050001ABC' : {
@@ -25,6 +32,8 @@ modelos_nuevos = {
 
       },
 
+
+
     '05RB050002AAC': {
       "L5030":{
         'modelo' : 'RB',
@@ -33,6 +42,8 @@ modelos_nuevos = {
         'tpnS':100,
         }
       },
+
+
     '05N03500_8AAZ':{
       "L5030":{
         'modelo' : 'N350',
@@ -40,6 +51,8 @@ modelos_nuevos = {
         'dp%': 12.79,
         'tpnS':167,
     }},
+
+
     '05N0450002BAC':{
       "L5030":{
         'modelo' : 'N450',
@@ -121,6 +134,8 @@ modelos_nuevos = {
         'dp%': 18.38,
         'tpnS':261
     }},
+
+
     '05R450D002ABC':{
       "L5030":{
         'modelo' : 'R450D',
@@ -233,6 +248,9 @@ modelos_nuevos = {
         'tpnS': 400
         }
       },
+
+
+
     '05N0380003AAC':{
       "L5030":{ # Modelo sin templador
         'modelo' : 'N380',
@@ -247,6 +265,8 @@ modelos_nuevos = {
         'tpnS': 610
         }
       },
+
+
     '05RB050004AAC':{
       "L5030":{
         'modelo' : 'RB',
@@ -261,6 +281,8 @@ modelos_nuevos = {
         'tpnS': 550
         }
       },
+
+
     '05R450D003AAC':{
       "L5030":{
         'modelo' : 'R450D',
@@ -275,6 +297,9 @@ modelos_nuevos = {
         'tpnS': 605
         }
       },
+
+
+
     '05RB050003AAC':{
       "L5030":{
         'modelo' : 'RB',
@@ -461,10 +486,16 @@ modelos_nuevos = {
 
     '05C400B004AAC':{
        "L3030":{
-        'modelo' : 'C400',
-        'cantidad':2,
-        'dp%': 12.37,
-        'tpnS': 780
+          'modelo' : 'C400',
+          'cantidad':2,
+          'dp%': 12.37,
+          'tpnS': 780
+        },
+        "L5030":{
+          'modelo' : 'C400',
+          'cantidad':2,
+          'dp%': 12.37,
+          'tpnS': 1096
         }
       },
 
@@ -821,11 +852,19 @@ modelos_nuevos = {
 
     "CAIN0X2_C0NJ_6MM":  {
         "L3030":{
-        'modelo' : 'COCINA',
-        'cantidad':6,
-        'dp%': 21.22,
-        'tpnS': 1418
-        }
+            'modelo' : 'COCINA',
+            'cantidad':6,
+            'dp%': 21.22,
+            'tpnS': 1418
+          },
+        "L5030":{
+            'modelo' : 'COCINA',
+            'cantidad':6,
+            'dp%': 21.22,
+            'tpnS': 2419
+        },
+
+
     },
 
     "05I800P001AAC": {
@@ -1136,6 +1175,109 @@ modelos_nuevos = {
           'tpnS': 799
         }
     },
+
+    '05RBO50005AAC': {
+      "L3030":{
+          'modelo' : 'BOILER',
+          'cantidad':4,
+          'dp%': 6.54,
+          'tpnS': 300
+        }
+    },
+   "05CO650002AAC": {
+      "L5030":{
+          'modelo' : 'BOILER',
+          'cantidad':4,
+          'dp%': 13.26,
+          'tpnS': 228
+        }
+    },
+   "05CALVI1_5ABI": {
+      "L5030":{
+          'modelo' : 'COCINA',
+          'cantidad':4,
+          'dp%': 17.25,
+          'tpnS': 579
+        }
+    },
+   "05RO490002AAC": {
+      "L5030":{
+          'modelo' : 'R490',
+          'cantidad':2,
+          'dp%': 8.72,
+          'tpnS': 136
+        }
+    },
+   "05CO650004AAC": {
+      "L5030":{
+          'modelo' : 'C650',
+          'cantidad':4,
+          'dp%': 25.65,
+          'tpnS': 992
+        }
+    },
+   "05CO650004AAC": {
+      "L5030":{
+          'modelo' : 'C650',
+          'cantidad':4,
+          'dp%': 25.65,
+          'tpnS': 992
+        }
+    },
+
+   "05SC350003AAC": {
+      "L5030":{
+          'modelo' : 'SC350',
+          'cantidad':14,
+          'dp%': 24.23,
+          'tpnS': 754
+        }
+    },
+   "05RBO50004ABC": {
+      "L3030":{
+          'modelo' : 'BOILER',
+          'cantidad':4,
+          'dp%': 3.7,
+          'tpnS': 313
+        }
+    },
+   "05RBO50005ABC": {
+      "L3030":{
+          'modelo' : 'BOILER',
+          'cantidad':4,
+          'dp%': 21.24,
+          'tpnS': 801
+        }
+    },
+   "05SC350004AAC": {
+      "L3030":{
+          'modelo' : 'SC350',
+          'cantidad':4,
+          'dp%': 21.62,
+          'tpnS': 841
+        },
+      "L5030":{
+          'modelo' : 'SC350',
+          'cantidad':4,
+          'dp%': 18.53,
+          'tpnS': 1075
+        }
+    },
+   "05SC350004ABC": {
+      "L3030":{
+          'modelo' : 'SC350',
+          'cantidad':9,
+          'dp%': 11.8,
+          'tpnS': 694
+        },
+      "L5030":{
+          'modelo' : 'SC350',
+          'cantidad':9,
+          'dp%': 11.8,
+          'tpnS': 694
+        }
+    },
+
 
     }
 
