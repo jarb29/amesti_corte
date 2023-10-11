@@ -13,6 +13,77 @@ import matplotlib.pyplot as plt
 st.title(":bar_chart: Corte Dashboard.")
 st.markdown("##")
 
+# Funcion para obtener el ultimo numero en la celda (espsor)
+def last_number(x):
+    number = [5, 8, 1, 2, 3, 4, 6]
+    reverse = reverse_string(x)
+    letter = [char for char in reverse]
+    number = numeric(letter)
+    number = not_none(number)
+
+    return number
+
+# Funcion para revertir el string
+def reverse_string(x):  
+    str1 = ""   # Declaring empty string to store the reversed string  
+    for i in x:  
+        str1 = i + str1  
+    return str1    # It will return the reverse string to the caller function  
+
+# Funcio para verificar el numero
+def numeric(x):
+    for each in x:
+        if each.isdigit():
+            if each == '0':
+                return 3
+            if each == '8':
+                return 0.8
+            if each == '9':
+                return 4
+            if each == '5':
+                return 0.5
+            else:
+                return int(each)
+def not_none(x):
+    if x == None:
+        return 4
+    else:
+        return x
+    
+def tobera5030(x):
+    if x>3:
+        return 70
+    elif x>2 and x<=3:
+        return 41
+    elif x>=1 and x<=2:
+        return 36
+    else:
+        return 16
+    
+# Funcion para agregar el area de la plancha
+def area_plancha(x):
+    reverse = reverse_string(x)
+    
+    letter = list(reverse)
+    
+    if letter[2] == 'A':
+                return 3*1
+    if letter[2] == 'B':
+                return 2.5*1    
+    if letter[2] == 'C':
+                return 2*1
+    if letter[2] == 'D':
+                return 1.5*3
+    if letter[2] == 'E':
+                return 1.5*2.5
+    if letter[2] == 'F':
+                return 1.5*2            
+    if letter[2] == 'G':
+                return 1*3
+    if letter[2] == 'H':
+                return 1*1.1
+
+
 
 @st.cache_data
 def total(df):
@@ -60,7 +131,11 @@ def total(df):
     df['cantidad_piezas'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['cantidad'], axis=1)
     df['Tiempo_nominal'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['tpnS'], axis=1)
     df['Desperdicio'] = df.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['dp%'], axis=1)
-    print(df.head())
+    # df['espesor'] = df['Programa'].apply(last_number)
+    # df['tobera m3/hr'] = df["espesor"].apply(tobera5030)
+    # df['tiempo horas'] = round(df['count'] * df['tiempo_promedio']/60, 2)
+    # df['nitrox m3'] = round(df['tobera m3/hr'] * df['tiempo_horas'] )
+    # df['nitrox kg'] = round(df['nitrox m3'] * 0.84 )
     return df, missing_programs, programa_laser
 
 
@@ -125,6 +200,8 @@ if uploaded_file is not None:
 # # TOP KPI's\
     total_tiempo = round(df["Tiempo_Bruto"].sum()/60, 2)
     date_tiempo = round(df_selection_p["Tiempo_Bruto"].sum()/60, 2)
+    planchas_totales = len(df)
+    planchas_selected = len(df_selection_p)
     programas = round(df['Programa'].nunique(), 1)
     programas_selected = round(df_selection_p['Programa'].nunique(), 1)
     # date_average_earning = round(df_selection['Programas'].nunique(), 1)
@@ -147,6 +224,9 @@ if uploaded_file is not None:
         st.text('___'*10)
         st.subheader("Total Programas cortados:")
         st.subheader(f"Total: {programas}")
+        st.text('___'*10)
+        st.subheader("Total Planchas:")
+        st.subheader(f"Total: {planchas_totales}")
 
         # st.text('___'*10)
         # st.subheader("Total Wrong choices:")
@@ -172,6 +252,9 @@ if uploaded_file is not None:
         st.text('___'*10)
         st.subheader("# Programas seleccionados:")
         st.subheader(f"Total: {programas_selected}")
+        st.text('___'*10)
+        st.subheader("# Planchas seleccionados:")
+        st.subheader(f"Total: {planchas_selected}")
 
         # st.text('___'*10)
         # st.subheader("# Date Wrong choices:")
@@ -208,11 +291,17 @@ if uploaded_file is not None:
     }
     by_product_laser['Modelo_programas'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['modelo'], axis=1)
     by_product_laser['cantidad_piezas'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['cantidad'], axis=1)
+    by_product_laser['espesor'] = by_product_laser['Programa'].apply(last_number)
+    by_product_laser['tobera_m3/hr'] = by_product_laser["espesor"].apply(tobera5030)
+    by_product_laser['tiempo_horas'] = round(by_product_laser['count'] * by_product_laser['tiempo_promedio']/60, 2)
+    by_product_laser['nitrox_m3'] = round(by_product_laser['tobera_m3/hr'] * by_product_laser['tiempo_horas'] )
+    by_product_laser['N'] = round(by_product_laser['nitrox_m3'] * 0.84 )
+    
+    
     by_product_laser['Tiempo_nominal'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['tpnS'], axis=1)
     by_product_laser['Desperdicio'] = by_product_laser.apply(lambda x:  modelos_nuevos[x['Programa']][x['Modelo_Laser']]['dp%'], axis=1)
-    by_product_laser['Chatarra'] = round(by_product_laser['Desperdicio'] * by_product_laser['count'] / 100, 2)
-    by_product_laser['N'] = by_product_laser.apply(lambda x:  round(nitrox[x['Modelo_Laser']] * x['tiempo_suma'],2), axis=1)
-    
+    by_product_laser['Chatarra'] = round(by_product_laser['Desperdicio'] * by_product_laser['count'], 2)
+    # by_product_laser['N'] = by_product_laser.apply(lambda x:  round(nitrox[x['Modelo_Laser']] * x['tiempo_suma'],2), axis=1)
     
     sum_chatarra = by_product_laser['Chatarra'].sum()
     sum_nitro = by_product_laser['N'].sum()

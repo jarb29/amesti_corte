@@ -551,11 +551,18 @@ modelos_nuevos = {
 
     '05CALLR006AAC':{
        "L3030":{
-        'modelo' : 'COCINA',
-        'cantidad':6,
-        'dp%': 21.22,
-        'tpnS': 1418
-    }},
+          'modelo' : 'COCINA',
+          'cantidad':6,
+          'dp%': 21.22,
+          'tpnS': 1418
+          },
+        "L5030":{
+            'modelo' : 'COCINA',
+            'cantidad':6,
+            'dp%': 21.22,
+            'tpnS': 2519
+          }
+       },
 
     '05Y81CH003AAI': {
        "L3030":{
@@ -863,8 +870,6 @@ modelos_nuevos = {
             'dp%': 21.22,
             'tpnS': 2419
         },
-
-
     },
 
     "05I800P001AAC": {
@@ -875,7 +880,6 @@ modelos_nuevos = {
           'tpnS': 935
         }
     },
-
 
     "05N0360003AAC": {
         "L5030":{
@@ -915,7 +919,6 @@ modelos_nuevos = {
           }
     },
 
-
     "05N03600_8AAZ": {
         "L5030":{
           'modelo' : 'N3604',
@@ -925,7 +928,6 @@ modelos_nuevos = {
         }
     },
 
-
      "05RB0500_8AAC":  {
         "L5030":{
           'modelo' : 'RB',
@@ -934,7 +936,6 @@ modelos_nuevos = {
           'tpnS': 88
         }
     },
-
 
      "05RB0500_8ABC": {
         "L5030":{
@@ -1014,7 +1015,6 @@ modelos_nuevos = {
         }
     },
 
-
     '05R0490004AAC': {
         "L5030":{
           'modelo' : 'R490',
@@ -1062,6 +1062,7 @@ modelos_nuevos = {
           'tpnS': 210
         }
     },
+
 ######################### 09/05/2023
     '05CALLR0_8AAZ': {
         "L5030":{
@@ -1178,7 +1179,7 @@ modelos_nuevos = {
 
     '05RBO50005AAC': {
       "L3030":{
-          'modelo' : 'BOILER',
+          'modelo' : 'RB',
           'cantidad':4,
           'dp%': 6.54,
           'tpnS': 300
@@ -1186,10 +1187,16 @@ modelos_nuevos = {
     },
    "05CO650002AAC": {
       "L5030":{
-          'modelo' : 'BOILER',
+          'modelo' : 'C650',
           'cantidad':4,
           'dp%': 13.26,
           'tpnS': 228
+        },
+      "L3030":{
+          'modelo' : 'C650',
+          'cantidad':4,
+          'dp%': 13.26,
+          'tpnS': 266
         }
     },
    "05CALVI1_5ABI": {
@@ -1198,6 +1205,12 @@ modelos_nuevos = {
           'cantidad':4,
           'dp%': 17.25,
           'tpnS': 579
+        },
+      "L3030":{
+          'modelo' : 'COCINA',
+          'cantidad':22,
+          'dp%': 39.42,
+          'tpnS': 600
         }
     },
    "05RO490002AAC": {
@@ -1231,11 +1244,17 @@ modelos_nuevos = {
           'cantidad':14,
           'dp%': 24.23,
           'tpnS': 754
+        },
+      "L3030":{
+          'modelo' : 'SC350',
+          'cantidad':14,
+          'dp%': 24.26,
+          'tpnS': 721
         }
     },
    "05RBO50004ABC": {
       "L3030":{
-          'modelo' : 'BOILER',
+          'modelo' : 'RB',
           'cantidad':4,
           'dp%': 3.7,
           'tpnS': 313
@@ -1243,7 +1262,7 @@ modelos_nuevos = {
     },
    "05RBO50005ABC": {
       "L3030":{
-          'modelo' : 'BOILER',
+          'modelo' : 'RB',
           'cantidad':4,
           'dp%': 21.24,
           'tpnS': 801
@@ -1266,18 +1285,70 @@ modelos_nuevos = {
    "05SC350004ABC": {
       "L3030":{
           'modelo' : 'SC350',
-          'cantidad':9,
-          'dp%': 11.8,
-          'tpnS': 694
+          'cantidad':5,
+          'dp%': 10.53,
+          'tpnS': 690
         },
       "L5030":{
           'modelo' : 'SC350',
-          'cantidad':9,
-          'dp%': 11.8,
-          'tpnS': 694
+          'cantidad':5,
+          'dp%': 10.53,
+          'tpnS': 1105
         }
     },
 
+   ####################################################
+      "05CALVI0_8AAZ": {
+      "L5030":{
+          'modelo' : 'COCINA',
+          'cantidad':5,
+          'dp%': 10.12,
+          'tpnS': 160
+        }
+    },
+
+    "05CALVI004AAC": {
+      "L3030":{
+          'modelo' : 'COCINA',
+          'cantidad':12,
+          'dp%': 13.25,
+          'tpnS': 310
+        }
+    },
+
+    "05RO4900_8ABZ": {
+      "L5030":{
+          'modelo' : 'R490',
+          'cantidad':14,
+          'dp%': 19.89,
+          'tpnS': 210
+        }
+    },
+
+   "05RBO50001AAC": {
+      "L5030":{
+          'modelo' : 'RB',
+          'cantidad':14,
+          'dp%': 19.89,
+          'tpnS': 210
+        }
+    },
+   "05RBO50001ABC": {
+      "L5030":{
+          'modelo' : 'RB',
+          'cantidad':14,
+          'dp%': 19.20,
+          'tpnS': 75
+        }
+    },
+   "05SC350002AAC": {
+      "L5030":{
+          'modelo' : 'SC350',
+          'cantidad':2,
+          'dp%': 17.96,
+          'tpnS': 253
+        }
+    },
 
     }
 
