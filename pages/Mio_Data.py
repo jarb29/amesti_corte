@@ -146,27 +146,61 @@ lasers = {
 }
 
 uploaded_files = st.file_uploader("Cargue el archivo",  accept_multiple_files=True)
+columns_names = ['#', 'Fecha', 'Codigo', 'Sistema', 'Tipo', '2Tipo', '3Tipo',
+                 'Descripcion', 'Codigos']
 if uploaded_files is not None:
+    colum1 = []
+    colum2 = []
+    colum3 = []
+    colum4 = []
+    colum5 = []
+    colum6 = []
+    colum7 = []
+    colum8 = []
+    colum9 = []
     for uploaded_file in uploaded_files:
         bytes_data = uploaded_file.read()
-        st.write("filename:", uploaded_file.name)
-        st.write(bytes_data)
+        # print(uploaded_file, 'uploaded_file')
+        # st.write("filename:", uploaded_file.name)
+        # st.write(bytes_data)
+        data_string = bytes_data.decode('utf-8').split('\r\n')
+        # print(data_string)
+        
+        for line in data_string:
+            columns = line.split('#') #or w/e you're delimiter/separator is
+            if len(columns) >= 8:
+                colum1.append(columns[0])
+                colum2.append(columns[1])
+                colum3.append(columns[2])
+                colum4.append(columns[3])
+                colum5.append(columns[4])
+                colum6.append(columns[5])
+                colum7.append(columns[6])
+                colum8.append(columns[7])
+                colum9.append(columns[8:])
+                # colum9.append(columns[9:])
+     
+    #     # j=json.dumps(result)
+    #     # df=pd.read_json(j, orient='index')
+    print(' ')
+    print(' ')
+    data = {
+        columns_names[0] : colum1,
+        columns_names[1] : colum2,
+        columns_names[2] : colum3,
+        columns_names[3] : colum4,
+        columns_names[4] : colum5,
+        columns_names[5] : colum6,
+        columns_names[6] : colum7,
+        columns_names[7] : colum8,
+        columns_names[8] : colum9,
+               
+        
+    }
+    df = pd.DataFrame(data=data)
+    print(df.head())
 
-        # print(uploaded_file.upload_url)
-        # log_data=open(each,'r')
-        # result={}
-        # i=0
-        # for line in log_data:
-        #     columns = line.split('') #or w/e you're delimiter/separator is
-        #     data={}
-        #     for c in columns:
-        #         key = c.split('=')[0]
-        #         value=c.split('=')[1]
-        #         data[key]=value
-        #         result[i]=data
-        #         i+=1
-        # j=json.dumps(result)
-        # df=pd.read_json(j, orient='index')
+    print('#'*100)
     # df = pd.read_excel(uploaded_file)
     # df, missing_programs, programa_laser = total(df)
     # st.write('Programas faltantes', missing_programs)
