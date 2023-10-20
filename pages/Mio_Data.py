@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 
 st.title(":bar_chart: Corte Dashboard.")
 st.markdown("##")
-
+st.text('Cargar la carpeta: messageHistory, ubicada en la siguiente direccion')
+st.text('mio >> trumpf >> fmccontroller >> server >> messageHistory')
 # Funcion para obtener el ultimo numero en la celda (espsor)
 def last_number(x):
     number = [5, 8, 1, 2, 3, 4, 6]
@@ -198,7 +199,8 @@ if uploaded_files is not None:
         
     }
     df = pd.DataFrame(data=data)
-    print(df.head())
+    df['Dia'] = df['Fecha'].apply(lambda x:  x.split(' ')[0])
+    df['Hora'] = df['Fecha'].apply(lambda x:  x.split(' ')[1])
 
     print('#'*100)
     # df = pd.read_excel(uploaded_file)
@@ -209,32 +211,34 @@ if uploaded_files is not None:
 
 
 
-# # ---- SIDEBAR ----
-# st.sidebar.header("Please Filter Here:")
+    # ---- SIDEBAR ----
+    st.sidebar.header("Please Seleccione aqui:")
 
 
 
-# sortedDates = sorted([datetime.datetime.strptime(item, '%Y-%m-%d') for item in df["date"].unique()])
-# sortedDates = [item.strftime('%Y-%m-%d') for item in sortedDates]
+    sortedDates = sorted([datetime.datetime.strptime(item, '%m/%d/%Y') for item in df["Dia"].unique()])
+    sortedDates = [item.strftime('%m/%d/%Y') for item in sortedDates]
+    
+    dias = st.sidebar.multiselect(
+            "Select Laser:",
+            options=sortedDates,
+            default=sortedDates[-10:]
+        )
+    df_selection = df.query(
+        "Dia == @dias"
+    )
+    
+    codigos = st.sidebar.multiselect(
+            "Select Modelo:",
+            options=df_selection['Codigo'].unique(),
+            default=df_selection['Codigo'].unique()[0:10],
+        )
+    df_selection2 = df_selection.query(
+            "Codigo == @codigos & Dia == @dias"
+        )
 
 
-#     laser = st.sidebar.multiselect(
-#         "Select Laser:",
-#         options=df['Laser'].unique(),
-#         default=df['Laser'].unique()
-#     )
-
-#     modelos = st.sidebar.multiselect(
-#         "Select Modelo:",
-#         options=df['Modelo_programas'].unique(),
-#         default=df['Modelo_programas'].unique()[0:10],
-#     )
-
-
-
-#     df_selection = df.query(
-#         "Laser == @laser & Modelo_programas == @modelos "
-#     )
+    st.write(df_selection2)
 
     
 #     programa = st.sidebar.multiselect(
@@ -449,23 +453,30 @@ if uploaded_files is not None:
     
 
 # # SALES BY HOUR [BAR CHART]
-# sales_by_hour = df_selection.groupby(by=["symbol"]).sum()[["profit"]]
-# fig_hourly_sales = px.bar(
-#     sales_by_hour,
-#     y=sales_by_hour.index,
-#     x="profit",
-#     orientation="h",
-#     title="<b>Profit by Symbol</b>",
-#     color_discrete_sequence=["#CC6600"] * len(sales_by_hour),
-#     template="plotly_dark",
-# )
-# fig_hourly_sales.update_layout(
-#     xaxis=dict(tickmode="linear"),
-#     plot_bgcolor="rgba(0,0,0,0)",
-#     yaxis=(dict(showgrid=False)),
-# )
-    # st.plotly_chart(fig_product_sales, use_container_width=True)
-    # st.markdown("""---""")
+    f1 = df_selection2.groupby(by=["Codigo"]).size().reset_index(name='Cantidad')
+    # f1 = f1[0:20]
+    f1['descripcion'] = f1['Codigo'].apply(lambda x:  df[df['Codigo'] == x]['Descripcion'].iloc[0])
+    # print(f1)
+
+    f2 = px.bar(
+        f1,
+        y='Cantidad',
+        x='Codigo',
+        color='descripcion',
+        # orientation="h",
+        title="<b>Profit by Symbol</b>",
+        color_discrete_sequence=["#CC6600"] * len(f1),
+        template="plotly_dark",
+    )
+    # f2.update_coloraxes(showscale=False)
+    f2.update(layout_showlegend=False)
+    f2.update_layout(
+        xaxis=dict(tickmode="linear"),
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=(dict(showgrid=False)),
+    )
+    st.plotly_chart(f2, use_container_width=True)
+    st.markdown("""---""")
     # st.plotly_chart(planchas_cortadas, use_container_width=True)
     # st.markdown("""---""")
     # st.plotly_chart(best20, use_container_width=True)
