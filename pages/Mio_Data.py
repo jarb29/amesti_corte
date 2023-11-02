@@ -9,6 +9,7 @@ import datetime
 from io import StringIO
 from modelos import modelos_nuevos
 import matplotlib.pyplot as plt
+import string
 
 st.title(":bar_chart: Corte Dashboard.")
 st.markdown("##")
@@ -220,7 +221,7 @@ if uploaded_files is not None:
     sortedDates = [item.strftime('%m/%d/%Y') for item in sortedDates]
     
     dias = st.sidebar.multiselect(
-            "Select Laser:",
+            "Select Fecha:",
             options=sortedDates,
             default=sortedDates[-10:]
         )
@@ -238,7 +239,7 @@ if uploaded_files is not None:
         )
 
 
-    st.write(df_selection2)
+    # st.write(df_selection2)
 
     
 #     programa = st.sidebar.multiselect(
@@ -457,6 +458,21 @@ if uploaded_files is not None:
     # f1 = f1[0:20]
     f1['descripcion'] = f1['Codigo'].apply(lambda x:  df[df['Codigo'] == x]['Descripcion'].iloc[0])
     # print(f1)
+    
+    st.sidebar.subheader("Seleccione tipo de falla:")
+    
+    fallas = st.sidebar.multiselect(
+            "Fallas:",
+            options=f1['descripcion'].unique(),
+            default=f1['descripcion'].unique()[0:1],
+        )
+    fallas_selection = f1.query(
+        "descripcion == @fallas"
+    )
+
+        
+    
+    
 
     f2 = px.bar(
         f1,
@@ -477,6 +493,96 @@ if uploaded_files is not None:
     )
     st.plotly_chart(f2, use_container_width=True)
     st.markdown("""---""")
+    # print(len(df))
+    time = 30
+    time_dff = []
+    for index, each in df.iterrows():
+        if index < len(df)-1:
+            hour_time = pd.to_datetime(df.iloc[index + 1]['Fecha']) -  pd.to_datetime(each['Fecha'])
+            time_dff.append(round(hour_time.seconds, 2)) 
+            
+    # print(len(df[1:]), 'df')
+    # print(sorted(time_dff), 'time_dff')
+    if len(fallas_selection['Codigo']) == 1:
+            code = fallas_selection['Codigo'].values[0]
+            # print(fallas_selection['Codigo'].values[0], 'The codigo')
+            st.write(code, 'Codigo seleccioando')
+            
+    final_df = df[1:]
+    final_df['seconds'] = time_dff
+    mini_df_index = final_df.index[final_df['seconds'] > time].tolist()
+    new_sequences = []
+    columns_names = []
+    for num, each in enumerate(mini_df_index):
+        if num == 0:
+            new_df = final_df[num:each]
+            
+        else:
+            before = mini_df_index[num-1]
+            new_df = final_df[before:each]
+        
+        new_df_final = new_df.query(
+            "Codigo == @code"
+        )
+        
+        if len(new_df_final) > 1:
+            new_sequences.append(new_df['Codigo'].tolist())
+            columns_names.extend(new_df['Codigo'].tolist())
+    column_name = list(set(columns_names))
+    test_list = list(string.ascii_uppercase)
+    df_flow = pd.DataFrame(columns=range(len(column_name)))
+    for numero, each in enumerate(new_sequences):
+        each = list(set(each))
+        if len(each) > 1:
+            for num, seq in enumerate(each):
+                df_flow.at[numero, num] = int(seq)
+    df_flow = df_flow.dropna(axis=1, how='all')
+    df_flow = df_flow.fillna(0)
+    columns_names = test_list[0:len(df_flow.columns)]
+    df_flow.columns = columns_names
+    # print(df_flow.columns)
+    for num, names in enumerate(columns_names[:-1]):
+        if num+1 == len(columns_names[:-1]):
+            filter_df = df_flow[df_flow[columns_names[num+1]] > 0]
+        
+        else:        
+            filter_df = df_flow[(df_flow[columns_names[num]] > 0) & (df_flow[columns_names[num+1]]==0)]
+            columns_names_drop = columns_names[num+1:]
+            filter_df = filter_df.drop(columns_names_drop, axis=1)
+            
+        
+        # print(filter_df)
+        if len(filter_df)>=1:
+            fig = px.parallel_categories(
+            filter_df, 
+            dimensions=filter_df.columns,
+            color='A', 
+            color_continuous_scale=px.colors.sequential.Agsunset,
+            template="plotly_dark",
+            # labels={'symbol':'Cripto', 'method':'Method', 'hour_sold':'HS',
+            #         'hour_bougth':'HB', 'profit_':'Profit'}
+            )
+            fig.update_coloraxes(showscale=False)
+            # fig.update_coloraxes(colorbar={'orientation':'h', 'thickness':20, 'y': -0.2})   
+                    
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("""---""")    
+            # fig = px.parallel_categories(
+            # df_flow, 
+            # dimensions=df_flow.columns,
+            # color='A', 
+            # color_continuous_scale=px.colors.sequential.Agsunset,
+            # template="plotly_dark",
+            # # labels={'symbol':'Cripto', 'method':'Method', 'hour_sold':'HS',
+            # #         'hour_bougth':'HB', 'profit_':'Profit'}
+            # )
+            # fig.update_coloraxes(showscale=False)
+            # # fig.update_coloraxes(colorbar={'orientation':'h', 'thickness':20, 'y': -0.2})   
+                    
+            # st.plotly_chart(fig, use_container_width=True)
+            # st.markdown("""---""")            
+                
+
     # st.plotly_chart(planchas_cortadas, use_container_width=True)
     # st.markdown("""---""")
     # st.plotly_chart(best20, use_container_width=True)
