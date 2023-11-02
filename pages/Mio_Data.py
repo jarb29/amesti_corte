@@ -503,6 +503,7 @@ if uploaded_files is not None:
             
     # print(len(df[1:]), 'df')
     # print(sorted(time_dff), 'time_dff')
+    code = 7190007 
     if len(fallas_selection['Codigo']) == 1:
             code = fallas_selection['Codigo'].values[0]
             # print(fallas_selection['Codigo'].values[0], 'The codigo')
@@ -520,7 +521,7 @@ if uploaded_files is not None:
         else:
             before = mini_df_index[num-1]
             new_df = final_df[before:each]
-        
+            
         new_df_final = new_df.query(
             "Codigo == @code"
         )
